@@ -1,8 +1,6 @@
-# Astro Starter Kit: Minimal
+# PubliPUCP Website
 
-```sh
-npm create astro@latest -- --template minimal
-```
+Astro-based website for PubliPUCP project.
 
 > 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
