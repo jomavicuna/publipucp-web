@@ -1,6 +1,6 @@
 # PubliPUCP Website
 
-Astro-based website for PubliPUCP project.
+Astro-based website for PubliPUCP project with Discord deployment notifications.
 
 > 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
