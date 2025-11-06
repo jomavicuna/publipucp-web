@@ -1,8 +1,0 @@
-{
-  "security": {
-    "protection": {
-      "enabled": true,
-      "excluded": ["/api/webhook-discord"]
-    }
-  }
-}
