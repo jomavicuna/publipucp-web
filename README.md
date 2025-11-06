@@ -2,7 +2,7 @@
 
 Astro-based website for PubliPUCP project.
 
-✅ Discord notifications enabled for deployments.
+✅ Discord notifications enabled for successful deployments.
 
 > 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
