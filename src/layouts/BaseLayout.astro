@@ -63,6 +63,19 @@ const absoluteOgImage = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogIm
     <link rel="apple-touch-icon" href="/favicon.png" />
 
     <!-- Fonts - System fonts only as per design system -->
+
+    <!-- PostHog Analytics -->
+    <script>
+      import { initPostHog, posthog } from '../lib/posthog';
+
+      // Initialize PostHog
+      initPostHog();
+
+      // Capture pageview manually for better control
+      if (typeof window !== 'undefined' && posthog) {
+        posthog.capture('$pageview');
+      }
+    </script>
   </head>
   <body class="min-h-screen flex flex-col">
     <!-- Header/Navigation -->
