@@ -7,7 +7,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "type-check": "astro check",
-    "astro": "astro"
+    "astro": "astro",
+    "deploy": "vercel --prod --yes"
   },
   "dependencies": {
     "@astrojs/tailwind": "^6.0.2",
