@@ -4,6 +4,8 @@ Astro-based website for PubliPUCP project.
 
 ✅ Discord notifications enabled for successful deployments.
 
+Last test: 2025-11-06
+
 > 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
 ## 🚀 Project Structure
