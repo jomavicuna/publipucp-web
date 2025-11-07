@@ -1,0 +1,436 @@
+---
+/**
+ * PubliData - Analytics & Insights Page
+ * Displays interesting metrics and data about the faculty
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/common/Header.astro';
+import Footer from '../components/common/Footer.astro';
+import { getAllProcessedProjects, getAllUsers, getAllCategories, getAllCourses } from '../lib/airtable';
+
+// Fetch all data
+const [projects, users, categories, courses] = await Promise.all([
+  getAllProcessedProjects(),
+  getAllUsers(),
+  getAllCategories(),
+  getAllCourses()
+]);
+
+// Calculate metrics
+const totalProjects = projects.length;
+const totalStudents = users.length;
+const totalCategories = categories.length;
+const totalCourses = courses.length;
+
+// Projects by cycle
+const projectsByCycle = projects.reduce((acc, project) => {
+  const cycle = project.cycle || 'Sin ciclo';
+  acc[cycle] = (acc[cycle] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+const cycles = Object.entries(projectsByCycle)
+  .sort(([a], [b]) => b.localeCompare(a))
+  .slice(0, 5);
+
+// Projects by category
+const projectsByCategory = projects.reduce((acc, project) => {
+  project.categories.forEach(cat => {
+    acc[cat] = (acc[cat] || 0) + 1;
+  });
+  return acc;
+}, {} as Record<string, number>);
+
+const topCategories = Object.entries(projectsByCategory)
+  .sort(([, a], [, b]) => b - a)
+  .slice(0, 10);
+
+// Projects by course
+const projectsByCourse = projects.reduce((acc, project) => {
+  project.courses.forEach(course => {
+    acc[course] = (acc[course] || 0) + 1;
+  });
+  return acc;
+}, {} as Record<string, number>);
+
+const topCourses = Object.entries(projectsByCourse)
+  .sort(([, a], [, b]) => b - a)
+  .slice(0, 10);
+
+// Students participation
+const studentProjects = projects.reduce((acc, project) => {
+  project.authors.forEach(author => {
+    acc[author.id] = (acc[author.id] || 0) + 1;
+  });
+  return acc;
+}, {} as Record<string, number>);
+
+const avgProjectsPerStudent = (Object.values(studentProjects).reduce((sum, count) => sum + count, 0) / Object.keys(studentProjects).length).toFixed(2);
+const maxProjectsByStudent = Math.max(...Object.values(studentProjects));
+
+// Projects with media
+const projectsWithImages = projects.filter(p => p.gallery.length > 0).length;
+const projectsWithVideos = projects.filter(p => p.videos.length > 0).length;
+const projectsWithCover = projects.filter(p => p.cover).length;
+
+// Collaboration metrics
+const avgAuthorsPerProject = (projects.reduce((sum, p) => sum + p.authors.length, 0) / totalProjects).toFixed(2);
+const soloProjects = projects.filter(p => p.authors.length === 1).length;
+const groupProjects = projects.filter(p => p.authors.length > 1).length;
+
+// Users with URL
+const usersWithUrl = users.filter(u => u.fields.url);
+const totalUsersWithUrl = usersWithUrl.length;
+const urlDomains = usersWithUrl.reduce((acc, user) => {
+  try {
+    const url = new URL(user.fields.url);
+    const domain = url.hostname.replace('www.', '');
+    acc[domain] = (acc[domain] || 0) + 1;
+  } catch (e) {
+    // Invalid URL
+  }
+  return acc;
+}, {} as Record<string, number>);
+
+const topDomains = Object.entries(urlDomains)
+  .sort(([, a], [, b]) => b - a)
+  .slice(0, 10);
+
+// Recent activity
+const latestCycle = cycles[0]?.[0] || '';
+const latestProjects = projects
+  .filter(p => p.cycle === latestCycle)
+  .sort((a, b) => {
+    if (!a.createdAt || !b.createdAt) return 0;
+    return b.createdAt.getTime() - a.createdAt.getTime();
+  })
+  .slice(0, 5);
+---
+
+<BaseLayout
+  title="PubliData - Métricas y Análisis"
+  description="Datos e insights sobre los proyectos de la facultad de Publicidad PUCP"
+  keywords={['publicidad', 'PUCP', 'datos', 'métricas', 'análisis', 'estadísticas']}
+>
+  <Header slot="header" />
+
+  <!-- Page Header -->
+  <section class="relative overflow-hidden bg-gradient-to-br from-[#0B6E4F] via-[#0d8a63] to-[#10a37f] py-20">
+    <!-- Decorative elements -->
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute top-0 left-0 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+      <div class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full filter blur-3xl"></div>
+    </div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="max-w-4xl mx-auto text-center">
+        <div class="inline-block mb-4 px-4 py-2 bg-white bg-opacity-20 rounded-full">
+          <span class="text-white font-semibold text-sm">Analytics Dashboard</span>
+        </div>
+        <h1 class="text-5xl md:text-6xl font-bold mb-6 text-white">
+          PubliData
+        </h1>
+        <p class="text-xl md:text-2xl text-white text-opacity-90 leading-relaxed">
+          Métricas, insights y datos interesantes sobre los proyectos de la facultad de Publicidad PUCP
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Metrics Grid -->
+  <section class="py-16 bg-gradient-to-b from-gray-50 to-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold mb-3">Métricas Generales</h2>
+        <p class="text-gray-600">Un vistazo rápido a los números que importan</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <!-- Total Projects -->
+        <div class="card p-8 text-center hover:shadow-xl transition-shadow duration-300 border-t-4 border-[var(--color-cta)]">
+          <div class="text-6xl font-bold text-[var(--color-cta)] mb-3">{totalProjects}</div>
+          <div class="text-gray-700 font-semibold text-lg">Proyectos Totales</div>
+          <div class="mt-2 text-xs text-gray-500">Acumulados</div>
+        </div>
+
+        <!-- Total Students -->
+        <div class="card p-8 text-center hover:shadow-xl transition-shadow duration-300 border-t-4 border-blue-700">
+          <div class="text-6xl font-bold text-blue-700 mb-3">{totalStudents}</div>
+          <div class="text-gray-700 font-semibold text-lg">Estudiantes</div>
+          <div class="mt-2 text-xs text-gray-500">Colaboradores únicos</div>
+        </div>
+
+        <!-- Total Categories -->
+        <div class="card p-8 text-center hover:shadow-xl transition-shadow duration-300 border-t-4 border-purple-700">
+          <div class="text-6xl font-bold text-purple-700 mb-3">{totalCategories}</div>
+          <div class="text-gray-700 font-semibold text-lg">Categorías</div>
+          <div class="mt-2 text-xs text-gray-500">Áreas creativas</div>
+        </div>
+
+        <!-- Total Courses -->
+        <div class="card p-8 text-center hover:shadow-xl transition-shadow duration-300 border-t-4 border-orange-700">
+          <div class="text-6xl font-bold text-orange-700 mb-3">{totalCourses}</div>
+          <div class="text-gray-700 font-semibold text-lg">Cursos</div>
+          <div class="mt-2 text-xs text-gray-500">Programas académicos</div>
+        </div>
+      </div>
+
+      <!-- Secondary Metrics -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card p-6 bg-gradient-to-br from-[var(--color-cta)] to-[#0d8a63] text-white hover:shadow-xl transition-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold opacity-90">Promedio Proyectos/Estudiante</h3>
+            <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <div class="text-4xl font-bold">{avgProjectsPerStudent}</div>
+        </div>
+
+        <div class="card p-6 bg-gradient-to-br from-blue-700 to-blue-800 text-white hover:shadow-xl transition-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold opacity-90">Promedio Autores/Proyecto</h3>
+            <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <div class="text-4xl font-bold">{avgAuthorsPerProject}</div>
+        </div>
+
+        <div class="card p-6 bg-gradient-to-br from-purple-700 to-purple-800 text-white hover:shadow-xl transition-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold opacity-90">Máximo Proyectos/Estudiante</h3>
+            <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+          </div>
+          <div class="text-4xl font-bold">{maxProjectsByStudent}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Charts and Detailed Stats -->
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold mb-3">Análisis Detallado</h2>
+        <p class="text-gray-600">Explora las tendencias y distribuciones</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- Projects by Cycle -->
+        <div class="card p-6">
+          <h3 class="text-2xl font-bold mb-6">Proyectos por Ciclo</h3>
+          <div class="space-y-4">
+            {cycles.map(([cycle, count]) => (
+              <div>
+                <div class="flex justify-between mb-2">
+                  <span class="font-medium">{cycle}</span>
+                  <span class="text-gray-600">{count} proyectos</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                  <div
+                    class="bg-[var(--color-cta)] h-3 rounded-full transition-all duration-500"
+                    style={`width: ${(count / totalProjects) * 100}%`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Top Categories -->
+        <div class="card p-6">
+          <h3 class="text-2xl font-bold mb-6">Top 10 Categorías</h3>
+          <div class="space-y-4">
+            {topCategories.map(([category, count]) => (
+              <div>
+                <div class="flex justify-between mb-2">
+                  <span class="font-medium text-sm">{category}</span>
+                  <span class="text-gray-600">{count}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    class="bg-[var(--color-cta)] h-2 rounded-full transition-all duration-500"
+                    style={`width: ${(count / Math.max(...Object.values(projectsByCategory))) * 100}%`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Top Courses -->
+        <div class="card p-6">
+          <h3 class="text-2xl font-bold mb-6">Top 10 Cursos</h3>
+          <div class="space-y-4">
+            {topCourses.map(([course, count]) => (
+              <div>
+                <div class="flex justify-between mb-2">
+                  <span class="font-medium text-sm">{course}</span>
+                  <span class="text-gray-600">{count}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    class="bg-[var(--color-cta)] h-2 rounded-full transition-all duration-500"
+                    style={`width: ${(count / Math.max(...Object.values(projectsByCourse))) * 100}%`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Media Stats -->
+        <div class="card p-6 hover:shadow-lg transition-shadow">
+          <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
+            <svg class="w-6 h-6 text-[var(--color-cta)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Estadísticas de Contenido
+          </h3>
+          <div class="space-y-6">
+            <div>
+              <div class="flex justify-between mb-2">
+                <span class="font-medium">Proyectos con Portada</span>
+                <span class="text-gray-600 font-bold">{projectsWithCover} <span class="text-sm font-normal">({((projectsWithCover / totalProjects) * 100).toFixed(1)}%)</span></span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-3">
+                <div
+                  class="bg-gradient-to-r from-[var(--color-cta)] to-[#0d8a63] h-3 rounded-full transition-all duration-500"
+                  style={`width: ${(projectsWithCover / totalProjects) * 100}%`}
+                />
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-2">
+                <span class="font-medium">Proyectos con Galería</span>
+                <span class="text-gray-600 font-bold">{projectsWithImages} <span class="text-sm font-normal">({((projectsWithImages / totalProjects) * 100).toFixed(1)}%)</span></span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-3">
+                <div
+                  class="bg-gradient-to-r from-blue-700 to-blue-800 h-3 rounded-full transition-all duration-500"
+                  style={`width: ${(projectsWithImages / totalProjects) * 100}%`}
+                />
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-2">
+                <span class="font-medium">Proyectos con Videos</span>
+                <span class="text-gray-600 font-bold">{projectsWithVideos} <span class="text-sm font-normal">({((projectsWithVideos / totalProjects) * 100).toFixed(1)}%)</span></span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-3">
+                <div
+                  class="bg-gradient-to-r from-purple-700 to-purple-800 h-3 rounded-full transition-all duration-500"
+                  style={`width: ${(projectsWithVideos / totalProjects) * 100}%`}
+                />
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-gray-200 grid grid-cols-2 gap-4">
+              <div class="text-center p-3 bg-gray-50 rounded-lg">
+                <div class="text-2xl font-bold text-[var(--color-cta)]">{soloProjects}</div>
+                <div class="text-xs text-gray-600 mt-1">Individuales</div>
+              </div>
+              <div class="text-center p-3 bg-gray-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-700">{groupProjects}</div>
+                <div class="text-xs text-gray-600 mt-1">En Grupo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Students with Portfolio URLs -->
+        <div class="card p-6 hover:shadow-lg transition-shadow">
+          <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
+            <svg class="w-6 h-6 text-[var(--color-cta)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            Portafolios en Línea
+          </h3>
+
+          <div class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-gray-700 font-medium">Estudiantes con Portafolio</span>
+              <span class="text-3xl font-bold text-[var(--color-cta)]">{totalUsersWithUrl}</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+              <div
+                class="bg-gradient-to-r from-[var(--color-cta)] to-[#0d8a63] h-3 rounded-full"
+                style={`width: ${(totalUsersWithUrl / totalStudents) * 100}%`}
+              />
+            </div>
+            <div class="text-xs text-gray-500 mt-2 text-right">
+              {((totalUsersWithUrl / totalStudents) * 100).toFixed(1)}% del total
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <h4 class="font-semibold text-gray-700 text-sm mb-3">Top Plataformas:</h4>
+            {topDomains.map(([domain, count], index) => (
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-gradient-to-br from-[var(--color-cta)] to-[#0d8a63] flex items-center justify-center text-white text-xs font-bold">
+                    {index + 1}
+                  </div>
+                  <span class="text-sm font-medium text-gray-700">{domain}</span>
+                </div>
+                <span class="text-sm font-bold text-gray-900">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Projects -->
+  {latestProjects.length > 0 && (
+    <section class="py-16 bg-gradient-to-b from-gray-50 to-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <div class="inline-block mb-3 px-4 py-2 bg-[var(--color-cta)] bg-opacity-10 rounded-full">
+            <span class="text-[var(--color-cta)] font-semibold text-sm">{latestCycle}</span>
+          </div>
+          <h2 class="text-3xl md:text-4xl font-bold mb-3">Últimos Proyectos</h2>
+          <p class="text-gray-600">Los trabajos más recientes de nuestros estudiantes</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          {latestProjects.map(project => (
+            <a href={`/projects/${project.slug}`} class="card overflow-hidden group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+              {project.cover && (
+                <div class="aspect-video overflow-hidden bg-gray-100 relative">
+                  <img
+                    src={project.cover.url}
+                    alt={project.title}
+                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+              )}
+              <div class="p-4">
+                <h3 class="font-semibold text-sm line-clamp-2 group-hover:text-[var(--color-cta)] transition-colors mb-2">
+                  {project.title}
+                </h3>
+                <div class="flex items-center gap-1 text-xs text-gray-500">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{project.authors.length} {project.authors.length === 1 ? 'estudiante' : 'estudiantes'}</span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <Footer slot="footer" />
+</BaseLayout>

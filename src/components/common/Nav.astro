@@ -1,0 +1,63 @@
+---
+/**
+ * Navigation Component
+ * Main site navigation links
+ */
+
+export interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+
+// Check if we're on a project detail page or muestra page
+const isProjectPage = currentPath.startsWith('/projects/') && currentPath !== '/projects';
+const isMuestraPage = currentPath === '/muestra' || currentPath.startsWith('/muestra');
+
+// Build navigation items based on current page
+const navItems = (isProjectPage || isMuestraPage)
+  ? [
+      { label: 'Archivo', href: 'https://publipucp.pe/projects' }
+    ]
+  : [
+      { label: 'Inicio', href: '/' },
+      { label: 'Archivo', href: 'https://publipucp.pe/projects' }
+    ];
+
+function isActive(href: string, currentPath: string): boolean {
+  if (href === '/') {
+    return currentPath === '/';
+  }
+  if (href === 'https://publipucp.pe/projects' || href === '/projects') {
+    return currentPath === '/muestra' || currentPath.startsWith('/projects');
+  }
+  return currentPath.startsWith(href);
+}
+---
+
+<nav class="hidden md:flex items-center space-x-8">
+  {navItems.map(item => (
+    <a
+      href={item.href}
+      class:list={[
+        'text-sm font-medium transition-colors',
+        isActive(item.href, currentPath)
+          ? 'text-[var(--color-cta)] border-b-2 border-[var(--color-cta)] pb-1'
+          : 'text-[var(--color-text)] hover:text-[var(--color-cta)]'
+      ]}
+    >
+      {item.label}
+    </a>
+  ))}
+</nav>
+
+<!-- Mobile menu button (for future mobile nav implementation) -->
+<button
+  type="button"
+  class="md:hidden p-2 rounded hover:bg-gray-100 transition-colors"
+  aria-label="Menu"
+>
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+</button>

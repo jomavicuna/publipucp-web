@@ -1,0 +1,235 @@
+---
+/**
+ * Projects Listing Page
+ * Displays all projects with filtering and search
+ */
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/common/Header.astro';
+import Footer from '../../components/common/Footer.astro';
+import { getAllProcessedProjects, getAllCategories, getAllCourses } from '../../lib/airtable';
+import { Image } from 'astro:assets';
+
+// Fetch all data
+const [projects, categories, courses] = await Promise.all([
+  getAllProcessedProjects(),
+  getAllCategories(),
+  getAllCourses()
+]);
+
+// Sort projects by creation date (newest first)
+const sortedProjects = projects.sort((a, b) => {
+  if (!a.createdAt || !b.createdAt) return 0;
+  return b.createdAt.getTime() - a.createdAt.getTime();
+});
+
+// Get unique cycles
+const cycles = [...new Set(projects.map(p => p.cycle).filter((c): c is string => !!c))]
+  .sort()
+  .reverse();
+
+// Get category names
+const categoryNames = categories.map(c => c.fields.Name).sort();
+const courseNames = courses.map(c => c.fields.Name).sort();
+---
+
+<BaseLayout
+  title="Proyectos"
+  description="Explora todos los proyectos creativos de los estudiantes de Publicidad PUCP"
+  keywords={['proyectos', 'publicidad', 'PUCP', 'portafolio', 'estudiantes']}
+>
+  <Header slot="header" />
+
+  <!-- Page Header -->
+  <section class="bg-gradient-to-b from-gray-50 to-white py-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-6">
+          Todos los proyectos
+        </h1>
+        <p class="text-xl text-gray-600">
+          {projects.length} proyectos creativos de estudiantes de Publicidad
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters Section -->
+  <section class="border-y border-gray-200 bg-white sticky top-16 z-40" id="filters">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex flex-wrap gap-4">
+        <!-- Search -->
+        <div class="flex-1 min-w-[250px]">
+          <input
+            type="text"
+            id="search"
+            placeholder="Buscar proyectos..."
+            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[var(--color-cta)] transition-colors"
+          />
+        </div>
+
+        <!-- Category Filter -->
+        <select
+          id="categoryFilter"
+          class="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[var(--color-cta)] transition-colors"
+        >
+          <option value="">Todas las categorías</option>
+          {categoryNames.map(category => (
+            <option value={category}>{category}</option>
+          ))}
+        </select>
+
+        <!-- Cycle Filter -->
+        <select
+          id="cycleFilter"
+          class="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[var(--color-cta)] transition-colors"
+        >
+          <option value="">Todos los ciclos</option>
+          {cycles.map(cycle => (
+            <option value={cycle}>{cycle}</option>
+          ))}
+        </select>
+
+        <!-- Reset Button -->
+        <button
+          id="resetFilters"
+          class="px-4 py-2 text-gray-600 hover:text-[var(--color-cta)] transition-colors"
+        >
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects Grid -->
+  <section class="py-12">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Results count -->
+      <div class="mb-6">
+        <p class="text-gray-600" id="resultsCount">
+          Mostrando <span id="count">{sortedProjects.length}</span> proyectos
+        </p>
+      </div>
+
+      <!-- Projects Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="projectsGrid">
+        {sortedProjects.map(project => (
+          <article
+            class="card overflow-hidden group project-card"
+            data-title={project.title.toLowerCase()}
+            data-categories={JSON.stringify(project.categories)}
+            data-cycle={project.cycle || ''}
+          >
+            <a href={`/projects/${project.slug}`} class="block">
+              {project.cover && (
+                <div class="aspect-video overflow-hidden bg-gray-100">
+                  <Image
+                    src={project.cover.url}
+                    alt={project.title}
+                    width={project.cover.width || 800}
+                    height={project.cover.height || 600}
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              )}
+              <div class="p-6">
+                <h3 class="text-xl font-bold mb-2 group-hover:text-[var(--color-cta)] transition-colors">
+                  {project.title}
+                </h3>
+                {project.description && (
+                  <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+                    {project.description}
+                  </p>
+                )}
+                <div class="flex flex-wrap gap-2 mb-4">
+                  {project.categories.map(category => (
+                    <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                      {category}
+                    </span>
+                  ))}
+                </div>
+                <div class="flex items-center justify-between text-sm text-gray-500">
+                  <span>{project.authors.length} {project.authors.length === 1 ? 'estudiante' : 'estudiantes'}</span>
+                  {project.cycle && <span>{project.cycle}</span>}
+                </div>
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+
+      <!-- No results message -->
+      <div id="noResults" class="text-center py-12 hidden">
+        <p class="text-gray-600 text-lg">No se encontraron proyectos con los filtros seleccionados</p>
+        <button
+          onclick="document.getElementById('resetFilters').click()"
+          class="mt-4 btn-cta"
+        >
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</BaseLayout>
+
+<script>
+  // Client-side filtering
+  const searchInput = document.getElementById('search') as HTMLInputElement;
+  const categoryFilter = document.getElementById('categoryFilter') as HTMLSelectElement;
+  const cycleFilter = document.getElementById('cycleFilter') as HTMLSelectElement;
+  const resetButton = document.getElementById('resetFilters') as HTMLButtonElement;
+  const projectCards = document.querySelectorAll('.project-card') as NodeListOf<HTMLElement>;
+  const countElement = document.getElementById('count') as HTMLElement;
+  const noResults = document.getElementById('noResults') as HTMLElement;
+  const projectsGrid = document.getElementById('projectsGrid') as HTMLElement;
+
+  function filterProjects() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedCategory = categoryFilter.value;
+    const selectedCycle = cycleFilter.value;
+
+    let visibleCount = 0;
+
+    projectCards.forEach(card => {
+      const title = card.getAttribute('data-title') || '';
+      const categories = JSON.parse(card.getAttribute('data-categories') || '[]');
+      const cycle = card.getAttribute('data-cycle') || '';
+
+      const matchesSearch = title.includes(searchTerm);
+      const matchesCategory = !selectedCategory || categories.includes(selectedCategory);
+      const matchesCycle = !selectedCycle || cycle === selectedCycle;
+
+      if (matchesSearch && matchesCategory && matchesCycle) {
+        card.classList.remove('hidden');
+        visibleCount++;
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    countElement.textContent = visibleCount.toString();
+
+    if (visibleCount === 0) {
+      noResults.classList.remove('hidden');
+      projectsGrid.classList.add('hidden');
+    } else {
+      noResults.classList.add('hidden');
+      projectsGrid.classList.remove('hidden');
+    }
+  }
+
+  function resetFilters() {
+    searchInput.value = '';
+    categoryFilter.value = '';
+    cycleFilter.value = '';
+    filterProjects();
+  }
+
+  // Event listeners
+  searchInput.addEventListener('input', filterProjects);
+  categoryFilter.addEventListener('change', filterProjects);
+  cycleFilter.addEventListener('change', filterProjects);
+  resetButton.addEventListener('click', resetFilters);
+</script>

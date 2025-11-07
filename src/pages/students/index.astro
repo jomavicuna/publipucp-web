@@ -1,0 +1,249 @@
+---
+/**
+ * Students Page
+ * Displays all students/authors with their projects
+ */
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/common/Header.astro';
+import Footer from '../../components/common/Footer.astro';
+import { getAllProcessedUsers } from '../../lib/airtable';
+
+// Fetch all users with project counts
+const users = await getAllProcessedUsers();
+
+// Sort by project count (descending) then by name
+const sortedUsers = users
+  .filter(u => u.projectCount > 0) // Only show users with projects
+  .sort((a, b) => {
+    if (b.projectCount !== a.projectCount) {
+      return b.projectCount - a.projectCount;
+    }
+    return a.fullName.localeCompare(b.fullName, 'es');
+  });
+
+// Group users by first letter of last name
+const groupedUsers = sortedUsers.reduce((acc, user) => {
+  const name = user.lastName || user.firstName || 'Unknown';
+  const firstLetter = name.charAt(0).toUpperCase();
+  if (!acc[firstLetter]) {
+    acc[firstLetter] = [];
+  }
+  acc[firstLetter].push(user);
+  return acc;
+}, {} as Record<string, typeof sortedUsers>);
+
+const letters = Object.keys(groupedUsers).sort();
+---
+
+<BaseLayout
+  title="Alumnos"
+  description="Conoce a los estudiantes de Publicidad PUCP y sus proyectos creativos"
+  keywords={['alumnos', 'estudiantes', 'publicidad', 'PUCP', 'autores']}
+>
+  <Header slot="header" />
+
+  <!-- Page Header -->
+  <section class="bg-gradient-to-b from-gray-50 to-white py-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-6">
+          Alumnos
+        </h1>
+        <p class="text-xl text-gray-600">
+          {sortedUsers.length} estudiantes con proyectos publicados
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Search Section -->
+  <section class="border-y border-gray-200 bg-white sticky top-16 z-40">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex flex-wrap gap-4">
+        <div class="flex-1 min-w-[250px]">
+          <input
+            type="text"
+            id="search"
+            placeholder="Buscar por nombre o código..."
+            class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[var(--color-cta)] transition-colors"
+          />
+        </div>
+        <button
+          id="resetSearch"
+          class="px-4 py-2 text-gray-600 hover:text-[var(--color-cta)] transition-colors"
+        >
+          Limpiar búsqueda
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Alphabet Navigation -->
+  <section class="bg-white border-b border-gray-200">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex flex-wrap gap-2 justify-center">
+        {letters.map(letter => (
+          <a
+            href={`#letter-${letter}`}
+            class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-[var(--color-cta)] hover:text-white transition-colors font-medium"
+          >
+            {letter}
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Students List -->
+  <section class="py-12">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Results count -->
+      <div class="mb-6">
+        <p class="text-gray-600" id="resultsCount">
+          Mostrando <span id="count">{sortedUsers.length}</span> alumnos
+        </p>
+      </div>
+
+      <!-- Students grouped by letter -->
+      <div class="space-y-12" id="studentsList">
+        {letters.map(letter => (
+          <div id={`letter-${letter}`} class="letter-group">
+            <h2 class="text-3xl font-bold mb-6 text-[var(--color-cta)] border-b-2 border-[var(--color-cta)] pb-2">
+              {letter}
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {groupedUsers[letter].map(user => (
+                <article
+                  class="card p-6 student-card"
+                  id={user.code || user.id}
+                  data-name={user.fullName.toLowerCase()}
+                  data-code={(user.code || '').toLowerCase()}
+                >
+                  <div class="mb-4">
+                    <h3 class="text-xl font-bold mb-1">
+                      {user.fullName}
+                    </h3>
+                    {user.code && (
+                      <p class="text-sm text-gray-500">
+                        {user.code}
+                      </p>
+                    )}
+                  </div>
+
+                  <div class="mb-4">
+                    <div class="flex items-center gap-2 text-gray-700">
+                      <svg class="w-5 h-5 text-[var(--color-cta)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      <span>
+                        {user.projectCount} {user.projectCount === 1 ? 'proyecto' : 'proyectos'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="flex gap-3">
+                    <a
+                      href={`/projects?author=${user.code || user.id}`}
+                      class="flex-1 text-center px-4 py-2 bg-[var(--color-cta)] text-white rounded hover:bg-[#095a40] transition-colors text-sm font-medium"
+                    >
+                      Ver proyectos
+                    </a>
+                    {user.email && (
+                      <a
+                        href={`mailto:${user.email}`}
+                        class="px-4 py-2 border border-[var(--color-cta)] text-[var(--color-cta)] rounded hover:bg-[var(--color-cta)] hover:text-white transition-colors"
+                        title="Enviar email"
+                      >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </a>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- No results message -->
+      <div id="noResults" class="text-center py-12 hidden">
+        <p class="text-gray-600 text-lg">No se encontraron alumnos con el término de búsqueda</p>
+        <button
+          onclick="document.getElementById('resetSearch').click()"
+          class="mt-4 btn-cta"
+        >
+          Limpiar búsqueda
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</BaseLayout>
+
+<script>
+  // Client-side search
+  const searchInput = document.getElementById('search') as HTMLInputElement;
+  const resetButton = document.getElementById('resetSearch') as HTMLButtonElement;
+  const studentCards = document.querySelectorAll('.student-card') as NodeListOf<HTMLElement>;
+  const letterGroups = document.querySelectorAll('.letter-group') as NodeListOf<HTMLElement>;
+  const countElement = document.getElementById('count') as HTMLElement;
+  const noResults = document.getElementById('noResults') as HTMLElement;
+  const studentsList = document.getElementById('studentsList') as HTMLElement;
+
+  function filterStudents() {
+    const searchTerm = searchInput.value.toLowerCase();
+    let visibleCount = 0;
+    const visibleLetters = new Set<string>();
+
+    studentCards.forEach(card => {
+      const name = card.getAttribute('data-name') || '';
+      const code = card.getAttribute('data-code') || '';
+
+      const matches = name.includes(searchTerm) || code.includes(searchTerm);
+
+      if (matches) {
+        card.classList.remove('hidden');
+        visibleCount++;
+
+        // Track which letter groups should be visible
+        const letterId = card.closest('.letter-group')?.id;
+        if (letterId) {
+          visibleLetters.add(letterId);
+        }
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    // Show/hide letter groups based on whether they have visible cards
+    letterGroups.forEach(group => {
+      if (visibleLetters.has(group.id)) {
+        group.classList.remove('hidden');
+      } else {
+        group.classList.add('hidden');
+      }
+    });
+
+    countElement.textContent = visibleCount.toString();
+
+    if (visibleCount === 0) {
+      noResults.classList.remove('hidden');
+      studentsList.classList.add('hidden');
+    } else {
+      noResults.classList.add('hidden');
+      studentsList.classList.remove('hidden');
+    }
+  }
+
+  function resetSearch() {
+    searchInput.value = '';
+    filterStudents();
+  }
+
+  searchInput.addEventListener('input', filterStudents);
+  resetButton.addEventListener('click', resetSearch);
+</script>

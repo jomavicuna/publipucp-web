@@ -1,16 +1,431 @@
 ---
+/**
+ * Homepage - Minimal Landing
+ * Simple page with animated background and single CTA button
+ */
 
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout
+  title="Modo PRO - Festival PubliPUCP 2025-2"
+  description="Descubre los proyectos creativos de los estudiantes de Publicidad de la PUCP en el festival Modo PRO 2025-2"
+  keywords={['publicidad', 'PUCP', 'proyectos', 'estudiantes', 'portafolio', 'creatividad', 'modo pro', 'festival']}
+  ogImage="/og-image.png"
+>
+  <!-- Full Screen Hero Section -->
+  <section class="relative overflow-hidden h-screen flex items-center justify-center">
+    <!-- Animated Background -->
+    <div class="absolute inset-0 bg-gradient-to-br from-[#9FD356] via-[#7AC74F] to-[#5BB843]">
+      <!-- Gradient Orbs -->
+      <div class="absolute inset-0">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+      </div>
+
+      <!-- Floating Glasses -->
+      <div class="absolute inset-0 overflow-hidden">
+        <div class="glasses glasses-1"></div>
+        <div class="glasses glasses-2"></div>
+        <div class="glasses glasses-3"></div>
+        <div class="glasses glasses-4"></div>
+        <div class="glasses glasses-5"></div>
+        <div class="glasses glasses-6"></div>
+        <div class="glasses glasses-7"></div>
+        <div class="glasses glasses-8"></div>
+        <div class="glasses glasses-9"></div>
+        <div class="glasses glasses-10"></div>
+        <div class="glasses glasses-11"></div>
+        <div class="glasses glasses-12"></div>
+        <div class="glasses glasses-13"></div>
+        <div class="glasses glasses-14"></div>
+        <div class="glasses glasses-15"></div>
+        <div class="glasses glasses-16"></div>
+        <div class="glasses glasses-17"></div>
+        <div class="glasses glasses-18"></div>
+      </div>
+
+      <!-- Particles -->
+      <div class="absolute inset-0">
+        <div class="particle particle-1"></div>
+        <div class="particle particle-2"></div>
+        <div class="particle particle-3"></div>
+        <div class="particle particle-4"></div>
+        <div class="particle particle-5"></div>
+        <div class="particle particle-6"></div>
+        <div class="particle particle-7"></div>
+        <div class="particle particle-8"></div>
+        <div class="particle particle-9"></div>
+        <div class="particle particle-10"></div>
+        <div class="particle particle-11"></div>
+        <div class="particle particle-12"></div>
+        <div class="particle particle-13"></div>
+        <div class="particle particle-14"></div>
+        <div class="particle particle-15"></div>
+        <div class="particle particle-16"></div>
+        <div class="particle particle-17"></div>
+        <div class="particle particle-18"></div>
+        <div class="particle particle-19"></div>
+        <div class="particle particle-20"></div>
+      </div>
+    </div>
+
+    <!-- Centered Content -->
+    <div class="relative z-10 flex flex-col items-center gap-6">
+      <!-- Logo -->
+      <div class="animate-float">
+        <img
+          src="/logomodopro.png"
+          alt="Modo PRO Logo"
+          class="w-[320px] md:w-[400px] lg:w-[480px] h-auto drop-shadow-2xl max-w-[85vw]"
+        />
+      </div>
+
+      <!-- Button -->
+      <a
+        href="/muestra"
+        id="muestra-btn"
+        class="inline-block bg-white text-[var(--color-cta)] px-12 py-4 rounded-lg hover:bg-gray-50 transition-all duration-300 font-bold text-xl shadow-2xl hover:shadow-3xl hover:scale-105"
+      >
+        <span id="btn-text">Ver la muestra</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Transition Overlay with Loading Counter -->
+  <div id="transition-overlay" class="fixed inset-0 z-50 pointer-events-none opacity-0 transition-opacity duration-500">
+    <div class="absolute inset-0 bg-gradient-to-br from-[#9FD356] via-[#7AC74F] to-[#5BB843]"></div>
+    <div class="absolute inset-0 backdrop-blur-0 transition-all duration-700" id="blur-layer"></div>
+
+    <!-- Animated Bubbles -->
+    <div id="bubbles-container" class="absolute inset-0 overflow-hidden" style="z-index: 1;"></div>
+
+    <!-- Loading Counter -->
+    <div class="absolute inset-0 flex items-center justify-center" style="z-index: 20;">
+      <div class="text-center">
+        <div id="loading-percentage" class="text-8xl font-bold text-white mb-4">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Immersive page transition with real loading counter
+    const btn = document.getElementById('muestra-btn');
+    const btnText = document.getElementById('btn-text');
+    const overlay = document.getElementById('transition-overlay');
+    const blurLayer = document.getElementById('blur-layer');
+    const loadingPercentage = document.getElementById('loading-percentage');
+    const bubblesContainer = document.getElementById('bubbles-container');
+
+    // Create animated glasses
+    function createGlasses() {
+      const glasses = document.createElement('div');
+      glasses.className = 'loading-glasses';
+
+      // Random size between 30px and 80px
+      const size = Math.random() * 50 + 30;
+      glasses.style.width = `${size}px`;
+      glasses.style.height = `${size}px`;
+
+      // Random horizontal position
+      glasses.style.left = `${Math.random() * 100}%`;
+
+      // Start from bottom
+      glasses.style.bottom = '-100px';
+      glasses.style.position = 'absolute';
+      glasses.style.opacity = '0.3';
+      glasses.style.backgroundImage = 'url(/lentes.svg)';
+      glasses.style.backgroundSize = 'contain';
+      glasses.style.backgroundRepeat = 'no-repeat';
+      glasses.style.backgroundPosition = 'center';
+      glasses.style.filter = 'brightness(0) invert(1)';
+
+      bubblesContainer?.appendChild(glasses);
+
+      return glasses;
+    }
+
+    btn?.addEventListener('click', async (e) => {
+      e.preventDefault();
+
+      if (btnText) {
+        btnText.textContent = 'Entrando...';
+      }
+
+      // Trigger immersive transition
+      if (overlay && blurLayer && loadingPercentage) {
+        overlay.classList.remove('pointer-events-none');
+        overlay.classList.remove('opacity-0');
+        overlay.classList.add('opacity-100');
+
+        // Add blur effect
+        setTimeout(() => {
+          blurLayer.style.backdropFilter = 'blur(20px)';
+        }, 200);
+
+        // Start counter animation that will reach 90% while loading
+        let currentPercentage = 0;
+        const interval = 50; // Update every 50ms
+        let loadingComplete = false;
+
+        // Only show glasses animation on desktop (min-width: 768px)
+        const isMobile = window.innerWidth < 768;
+        let glassesTimer: number | undefined;
+
+        if (!isMobile) {
+          // Glasses creation interval (starts slow, speeds up)
+          let glassesInterval = 250; // Start creating glasses every 250ms
+
+          function startGlasses() {
+            glassesTimer = window.setInterval(() => {
+              const glasses = createGlasses();
+
+              // Calculate animation speed based on loading percentage
+              // Faster as percentage increases
+              const speedMultiplier = 1 + (currentPercentage / 100) * 3; // 1x to 4x speed
+              const duration = (4000 / speedMultiplier); // Base 4s, goes down to 1s
+
+              // Add rotation to glasses
+              const randomRotation = Math.random() * 360;
+              glasses.style.transform = `rotate(${randomRotation}deg)`;
+              glasses.style.transition = `bottom ${duration}ms ease-out, opacity 1.5s, transform ${duration}ms ease-in-out`;
+
+              // Animate glasses up with slight rotation
+              setTimeout(() => {
+                const endRotation = randomRotation + (Math.random() * 180 - 90);
+                glasses.style.bottom = '110%';
+                glasses.style.opacity = '0';
+                glasses.style.transform = `rotate(${endRotation}deg)`;
+              }, 50);
+
+              // Remove glasses after animation
+              setTimeout(() => {
+                glasses.remove();
+              }, duration + 1500);
+
+              // Speed up glasses creation as loading progresses
+              if (currentPercentage > 40) {
+                clearInterval(glassesTimer);
+                glassesInterval = Math.max(80, 250 - (currentPercentage * 2)); // Min 80ms
+                startGlasses();
+              }
+            }, glassesInterval);
+          }
+
+          startGlasses();
+        }
+
+        // Animate counter gradually (slows down as it approaches 90%)
+        const counterInterval = setInterval(() => {
+          if (!loadingComplete) {
+            // Asymptotic approach to 90%
+            const remaining = 90 - currentPercentage;
+            currentPercentage += remaining * 0.1; // Increase by 10% of remaining distance
+
+            if (currentPercentage >= 89.9) {
+              currentPercentage = 90;
+            }
+
+            loadingPercentage.textContent = Math.floor(currentPercentage) + '%';
+          } else {
+            // Once loading complete, animate to 100% quickly
+            currentPercentage += 5;
+            if (currentPercentage >= 100) {
+              currentPercentage = 100;
+              loadingPercentage.textContent = '100%';
+              clearInterval(counterInterval);
+              if (glassesTimer) clearInterval(glassesTimer);
+
+              // Navigate after showing 100%
+              setTimeout(() => {
+                window.location.href = '/muestra';
+              }, 200);
+            } else {
+              loadingPercentage.textContent = Math.floor(currentPercentage) + '%';
+            }
+          }
+        }, interval);
+
+        // Prefetch the page
+        try {
+          const startTime = Date.now();
+          const response = await fetch('/muestra');
+          await response.text();
+
+          // Mark as complete
+          loadingComplete = true;
+        } catch (error) {
+          console.error('Error prefetching:', error);
+          // Still mark as complete to proceed
+          loadingComplete = true;
+        }
+      }
+    });
+  </script>
+
+  <style>
+    /* Logo Float Animation */
+    @keyframes float-logo {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+
+    .animate-float {
+      animation: float-logo 3s ease-in-out infinite;
+    }
+
+    /* Gradient Orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      animation: pulse 8s infinite ease-in-out;
+    }
+
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, #C4E538 0%, #9FD356 100%);
+      top: -100px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, #5BB843 0%, #7AC74F 100%);
+      bottom: -100px;
+      right: -100px;
+      animation-delay: 2s;
+    }
+
+    .orb-3 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, #9FD356 0%, #C4E538 100%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: 4s;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1) translateX(0);
+        opacity: 0.4;
+      }
+      50% {
+        transform: scale(1.2) translateX(20px);
+        opacity: 0.6;
+      }
+    }
+
+    /* Floating Glasses */
+    .glasses {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      opacity: 0.2;
+      animation: float 12s infinite ease-in-out;
+      background-image: url('/lentes.svg');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      filter: brightness(0) invert(1);
+    }
+
+    .glasses-1 { top: 10%; left: 15%; animation-delay: 0s; animation-duration: 15s; width: 50px; height: 50px; }
+    .glasses-2 { top: 20%; right: 20%; animation-delay: 2s; animation-duration: 13s; width: 70px; height: 70px; }
+    .glasses-3 { top: 40%; left: 10%; animation-delay: 4s; animation-duration: 16s; width: 45px; height: 45px; }
+    .glasses-4 { top: 60%; right: 15%; animation-delay: 6s; animation-duration: 14s; width: 65px; height: 65px; }
+    .glasses-5 { top: 80%; left: 25%; animation-delay: 8s; animation-duration: 15s; width: 55px; height: 55px; }
+    .glasses-6 { top: 70%; right: 30%; animation-delay: 10s; animation-duration: 13s; width: 60px; height: 60px; }
+    .glasses-7 { top: 30%; left: 40%; animation-delay: 12s; animation-duration: 16s; width: 50px; height: 50px; }
+    .glasses-8 { top: 50%; right: 45%; animation-delay: 14s; animation-duration: 14s; width: 70px; height: 70px; }
+    .glasses-9 { top: 15%; left: 50%; animation-delay: 3s; animation-duration: 15s; width: 55px; height: 55px; }
+    .glasses-10 { top: 65%; left: 60%; animation-delay: 5s; animation-duration: 13s; width: 48px; height: 48px; }
+    .glasses-11 { top: 35%; right: 25%; animation-delay: 7s; animation-duration: 16s; width: 62px; height: 62px; }
+    .glasses-12 { top: 85%; right: 40%; animation-delay: 9s; animation-duration: 14s; width: 52px; height: 52px; }
+    .glasses-13 { top: 25%; left: 70%; animation-delay: 11s; animation-duration: 15s; width: 58px; height: 58px; }
+    .glasses-14 { top: 55%; right: 5%; animation-delay: 13s; animation-duration: 13s; width: 46px; height: 46px; }
+    .glasses-15 { top: 5%; right: 35%; animation-delay: 1s; animation-duration: 16s; width: 54px; height: 54px; }
+    .glasses-16 { top: 75%; left: 5%; animation-delay: 15s; animation-duration: 14s; width: 64px; height: 64px; }
+    .glasses-17 { top: 45%; left: 75%; animation-delay: 17s; animation-duration: 15s; width: 50px; height: 50px; }
+    .glasses-18 { top: 90%; right: 60%; animation-delay: 19s; animation-duration: 13s; width: 56px; height: 56px; }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+      25% {
+        transform: translate(30px, -30px) rotate(5deg);
+      }
+      50% {
+        transform: translate(-20px, 20px) rotate(-5deg);
+      }
+      75% {
+        transform: translate(40px, 10px) rotate(3deg);
+      }
+    }
+
+    /* Particles */
+    .particle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      animation: rise 10s infinite ease-in;
+    }
+
+    .particle-1 { width: 4px; height: 4px; left: 5%; bottom: -10px; animation-delay: 0s; animation-duration: 8s; }
+    .particle-2 { width: 6px; height: 6px; left: 15%; bottom: -10px; animation-delay: 1s; animation-duration: 10s; }
+    .particle-3 { width: 3px; height: 3px; left: 25%; bottom: -10px; animation-delay: 2s; animation-duration: 9s; }
+    .particle-4 { width: 5px; height: 5px; left: 35%; bottom: -10px; animation-delay: 3s; animation-duration: 11s; }
+    .particle-5 { width: 4px; height: 4px; left: 45%; bottom: -10px; animation-delay: 4s; animation-duration: 8s; }
+    .particle-6 { width: 6px; height: 6px; left: 55%; bottom: -10px; animation-delay: 5s; animation-duration: 10s; }
+    .particle-7 { width: 3px; height: 3px; left: 65%; bottom: -10px; animation-delay: 6s; animation-duration: 9s; }
+    .particle-8 { width: 5px; height: 5px; left: 75%; bottom: -10px; animation-delay: 7s; animation-duration: 11s; }
+    .particle-9 { width: 4px; height: 4px; left: 85%; bottom: -10px; animation-delay: 0.5s; animation-duration: 8s; }
+    .particle-10 { width: 5px; height: 5px; left: 95%; bottom: -10px; animation-delay: 1.5s; animation-duration: 10s; }
+    .particle-11 { width: 3px; height: 3px; left: 8%; bottom: -10px; animation-delay: 2.5s; animation-duration: 9s; }
+    .particle-12 { width: 6px; height: 6px; left: 18%; bottom: -10px; animation-delay: 3.5s; animation-duration: 11s; }
+    .particle-13 { width: 4px; height: 4px; left: 28%; bottom: -10px; animation-delay: 4.5s; animation-duration: 8s; }
+    .particle-14 { width: 5px; height: 5px; left: 38%; bottom: -10px; animation-delay: 5.5s; animation-duration: 10s; }
+    .particle-15 { width: 3px; height: 3px; left: 48%; bottom: -10px; animation-delay: 6.5s; animation-duration: 9s; }
+    .particle-16 { width: 6px; height: 6px; left: 58%; bottom: -10px; animation-delay: 7.5s; animation-duration: 11s; }
+    .particle-17 { width: 4px; height: 4px; left: 68%; bottom: -10px; animation-delay: 8.5s; animation-duration: 8s; }
+    .particle-18 { width: 5px; height: 5px; left: 78%; bottom: -10px; animation-delay: 9.5s; animation-duration: 10s; }
+    .particle-19 { width: 3px; height: 3px; left: 88%; bottom: -10px; animation-delay: 1.2s; animation-duration: 9s; }
+    .particle-20 { width: 6px; height: 6px; left: 12%; bottom: -10px; animation-delay: 2.2s; animation-duration: 11s; }
+
+    @keyframes rise {
+      0% {
+        bottom: -10px;
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        bottom: 110%;
+        opacity: 0;
+      }
+    }
+
+    /* Loading Glasses */
+    .loading-glasses {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+  </style>
+</BaseLayout>

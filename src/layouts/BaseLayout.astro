@@ -1,0 +1,79 @@
+---
+/**
+ * Base Layout - Used by all pages
+ * Provides consistent HTML structure, SEO, and navigation
+ */
+
+export interface Props {
+  title?: string;
+  description?: string;
+  keywords?: string[];
+  ogImage?: string;
+  canonicalUrl?: string;
+}
+
+const {
+  title = 'PubliPUCP - Proyectos de Publicidad',
+  description = 'Portafolio de proyectos de los estudiantes de Publicidad de la PUCP',
+  keywords = ['publicidad', 'PUCP', 'proyectos', 'estudiantes', 'portafolio'],
+  ogImage = '/og-image.jpg',
+  canonicalUrl = Astro.url.href
+} = Astro.props;
+
+const fullTitle = title === 'PubliPUCP - Proyectos de Publicidad' ? title : `${title} | PubliPUCP`;
+
+// Convert relative OG image to absolute URL for social media
+const siteUrl = Astro.site ? Astro.site.origin : 'https://publipucp.pe';
+const absoluteOgImage = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- SEO Meta Tags -->
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="keywords" content={keywords.join(', ')} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={absoluteOgImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="PubliPUCP" />
+    <meta property="og:locale" content="es_PE" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalUrl} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={absoluteOgImage} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <!-- Fonts - System fonts only as per design system -->
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <!-- Header/Navigation -->
+    <slot name="header" />
+
+    <!-- Main Content -->
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <slot name="footer" />
+  </body>
+</html>

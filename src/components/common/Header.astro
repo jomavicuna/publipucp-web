@@ -1,0 +1,32 @@
+---
+/**
+ * Header Component
+ * Main site header with navigation
+ */
+
+import Nav from './Nav.astro';
+
+const currentPath = Astro.url.pathname;
+
+// Check if we're on a project detail page or muestra page
+const isProjectPage = currentPath.startsWith('/projects/') && currentPath !== '/projects';
+const isMuestraPage = currentPath === '/muestra' || currentPath.startsWith('/muestra');
+
+// Logo should link to /muestra when on project or muestra pages
+const logoHref = (isProjectPage || isMuestraPage) ? '/muestra' : '/';
+---
+
+<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href={logoHref} class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <img src="/logo.png" alt="PubliPUCP Logo" class="h-10 w-auto" />
+        <span class="text-2xl font-bold text-[var(--color-text)]">PubliPUCP</span>
+      </a>
+
+      <!-- Navigation -->
+      <Nav currentPath={currentPath} />
+    </div>
+  </div>
+</header>

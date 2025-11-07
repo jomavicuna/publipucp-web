@@ -1,0 +1,55 @@
+---
+/**
+ * Footer Component
+ * Site footer with information and links
+ */
+
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="bg-white border-t border-gray-200 mt-auto">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- About -->
+      <div>
+        <h3 class="text-lg font-bold mb-4">PubliPUCP</h3>
+        <p class="text-sm text-gray-600">
+          Portafolio de proyectos de los estudiantes de Publicidad de la Pontificia Universidad Católica del Perú.
+        </p>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h3 class="text-lg font-bold mb-4">Enlaces</h3>
+        <ul class="space-y-2 text-sm">
+          <li>
+            <a href="/" class="text-gray-600 hover:text-[var(--color-cta)] transition-colors">
+              Inicio
+            </a>
+          </li>
+          <li>
+            <a href="/projects" class="text-gray-600 hover:text-[var(--color-cta)] transition-colors">
+              Proyectos
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h3 class="text-lg font-bold mb-4">Contacto</h3>
+        <p class="text-sm text-gray-600">
+          Facultad de Ciencias y Artes de la Comunicación<br />
+          Pontificia Universidad Católica del Perú
+        </p>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="border-t border-gray-200 mt-8 pt-8 text-center">
+      <p class="text-sm text-gray-600">
+        {currentYear} PubliPUCP. Todos los derechos reservados.
+      </p>
+    </div>
+  </div>
+</footer>

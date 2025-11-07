@@ -1,0 +1,506 @@
+---
+/**
+ * Muestra de Proyectos - Featured Projects
+ * Displays recent and highlighted projects
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/common/Header.astro';
+import Footer from '../components/common/Footer.astro';
+import { getAllProcessedProjects, getAllCategories } from '../lib/airtable';
+import { Image } from 'astro:assets';
+
+// Fetch all data
+const [projects, categories] = await Promise.all([
+  getAllProcessedProjects(),
+  getAllCategories()
+]);
+
+// Filter projects to show only 2025-1 cycle
+const filteredProjects = projects.filter(p => p.cycle === '2025-1');
+
+// Sort filtered projects by creation date
+const sortedProjects = filteredProjects
+  .sort((a, b) => {
+    if (!a.createdAt || !b.createdAt) return 0;
+    return b.createdAt.getTime() - a.createdAt.getTime();
+  });
+
+// Get stats
+const totalProjects = sortedProjects.length;
+const totalStudents = new Set(sortedProjects.flatMap(p => p.authors.map(a => a.id))).size;
+
+// Get category names for filter (sorted)
+const categoryNames = categories.map(c => c.fields.Name).sort();
+
+// Calculate projects per category for display (only for 2025-1 cycle)
+const projectsPerCategory = categoryNames.reduce((acc, cat) => {
+  acc[cat] = sortedProjects.filter(p => p.categories.includes(cat)).length;
+  return acc;
+}, {} as Record<string, number>);
+---
+
+<BaseLayout
+  title="La Muestra - PubliPUCP"
+  description="Descubre los proyectos más recientes de los estudiantes de Publicidad PUCP"
+  keywords={['muestra', 'proyectos', 'publicidad', 'PUCP', 'portafolio', 'creatividad']}
+>
+  <Header slot="header" />
+
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden bg-gradient-to-br from-[#9FD356] via-[#7AC74F] to-[#5BB843] py-20">
+    <!-- Animated Background -->
+    <div class="absolute inset-0">
+      <!-- Gradient Orbs -->
+      <div class="absolute inset-0">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+      </div>
+
+      <!-- Floating Glasses -->
+      <div class="absolute inset-0 overflow-hidden">
+        <div class="glasses glasses-1"></div>
+        <div class="glasses glasses-2"></div>
+        <div class="glasses glasses-3"></div>
+        <div class="glasses glasses-4"></div>
+        <div class="glasses glasses-5"></div>
+        <div class="glasses glasses-6"></div>
+        <div class="glasses glasses-7"></div>
+        <div class="glasses glasses-8"></div>
+        <div class="glasses glasses-9"></div>
+        <div class="glasses glasses-10"></div>
+        <div class="glasses glasses-11"></div>
+        <div class="glasses glasses-12"></div>
+        <div class="glasses glasses-13"></div>
+        <div class="glasses glasses-14"></div>
+        <div class="glasses glasses-15"></div>
+        <div class="glasses glasses-16"></div>
+        <div class="glasses glasses-17"></div>
+        <div class="glasses glasses-18"></div>
+      </div>
+
+      <!-- Particles -->
+      <div class="absolute inset-0">
+        <div class="particle particle-1"></div>
+        <div class="particle particle-2"></div>
+        <div class="particle particle-3"></div>
+        <div class="particle particle-4"></div>
+        <div class="particle particle-5"></div>
+        <div class="particle particle-6"></div>
+        <div class="particle particle-7"></div>
+        <div class="particle particle-8"></div>
+        <div class="particle particle-9"></div>
+        <div class="particle particle-10"></div>
+        <div class="particle particle-11"></div>
+        <div class="particle particle-12"></div>
+        <div class="particle particle-13"></div>
+        <div class="particle particle-14"></div>
+        <div class="particle particle-15"></div>
+        <div class="particle particle-16"></div>
+        <div class="particle particle-17"></div>
+        <div class="particle particle-18"></div>
+        <div class="particle particle-19"></div>
+        <div class="particle particle-20"></div>
+      </div>
+    </div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="max-w-4xl mx-auto text-center text-white">
+        <h1 class="text-5xl md:text-6xl font-bold mb-6">
+          Modo PRO
+        </h1>
+        <p class="text-xl md:text-2xl opacity-90">
+          Mira los proyectos de la muestra de este ciclo.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Tabs Section -->
+  <section class="border-b border-gray-200 bg-white sticky top-16 z-40" id="category-tabs">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Filtrar por categoría</h2>
+      </div>
+
+      <!-- Tabs -->
+      <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div class="flex gap-2 py-4 min-w-max">
+          <!-- All tab -->
+          <button
+            class="category-tab active px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all"
+            data-category="all"
+          >
+            Todos <span class="ml-1 text-xs opacity-75">({totalProjects})</span>
+          </button>
+
+          <!-- Category tabs -->
+          {categoryNames.map(category => (
+            <button
+              class="category-tab px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all"
+              data-category={category}
+            >
+              {category} <span class="ml-1 text-xs opacity-75">({projectsPerCategory[category]})</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects Grid -->
+  <section class="py-12 bg-gray-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Results count -->
+      <div class="mb-6">
+        <p class="text-gray-600" id="results-count">
+          Mostrando <span id="count">{sortedProjects.length}</span> proyectos
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="projects-grid">
+        {sortedProjects.map(project => (
+          <article
+            class="project-card card overflow-hidden group hover:shadow-xl transition-all duration-300"
+            data-categories={JSON.stringify(project.categories)}
+          >
+            <a href={`/projects/${project.slug}`} class="block">
+              {project.cover && (
+                <div class="aspect-[4/3] overflow-hidden bg-gray-100">
+                  <Image
+                    src={project.cover.url}
+                    alt={project.title}
+                    width={project.cover.width || 600}
+                    height={project.cover.height || 450}
+                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                </div>
+              )}
+              <div class="p-5">
+                <h3 class="text-lg font-bold mb-2 group-hover:text-[var(--color-cta)] transition-colors line-clamp-2">
+                  {project.title}
+                </h3>
+                {project.description && (
+                  <p class="text-gray-600 text-sm mb-3 line-clamp-2">
+                    {project.description}
+                  </p>
+                )}
+                <div class="flex flex-wrap gap-1.5">
+                  {project.categories.slice(0, 2).map(category => (
+                    <span class="px-2 py-1 bg-[var(--color-cta)] bg-opacity-10 text-[var(--color-cta)] text-xs rounded-full font-medium">
+                      {category}
+                    </span>
+                  ))}
+                  {project.categories.length > 2 && (
+                    <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                      +{project.categories.length - 2}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+
+      <!-- CTA to all projects -->
+      <div class="text-center mt-12">
+        <a href="/projects" class="btn-cta inline-flex items-center gap-2">
+          Explorar todos los proyectos
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6">
+          Sobre la Muestra
+        </h2>
+        <p class="text-lg text-gray-700 leading-relaxed mb-8">
+          La Muestra PubliPUCP reúne los mejores proyectos creativos desarrollados por estudiantes
+          de la especialidad de Publicidad de la Pontificia Universidad Católica del Perú.
+          Aquí podrás encontrar campañas publicitarias, proyectos de branding, contenido digital
+          y mucho más.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a href="/projects" class="btn-outline">
+            Ver todos los proyectos
+          </a>
+          <a href="/publidata" class="btn-outline">
+            Ver estadísticas
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</BaseLayout>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Tab styles */
+  .category-tab {
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 2px solid transparent;
+  }
+
+  .category-tab:hover {
+    background: #e5e7eb;
+    color: #374151;
+  }
+
+  .category-tab.active {
+    background: #0F0F0F;
+    color: white;
+    border-color: #0F0F0F;
+  }
+
+  .category-tab.active:hover {
+    background: #000000;
+    border-color: #000000;
+  }
+
+  /* Gradient Orbs */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    animation: pulse 8s infinite ease-in-out;
+  }
+
+  .orb-1 {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, #C4E538 0%, #9FD356 100%);
+    top: -100px;
+    left: -100px;
+    animation-delay: 0s;
+  }
+
+  .orb-2 {
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, #5BB843 0%, #7AC74F 100%);
+    bottom: -100px;
+    right: -100px;
+    animation-delay: 2s;
+  }
+
+  .orb-3 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, #9FD356 0%, #C4E538 100%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation-delay: 4s;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1) translateX(0);
+      opacity: 0.4;
+    }
+    50% {
+      transform: scale(1.2) translateX(20px);
+      opacity: 0.6;
+    }
+  }
+
+  /* Floating Glasses */
+  .glasses {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    opacity: 0.2;
+    animation: float 12s infinite ease-in-out;
+    background-image: url('/lentes.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: brightness(0) invert(1);
+  }
+
+  .glasses-1 { top: 10%; left: 15%; animation-delay: 0s; animation-duration: 15s; width: 50px; height: 50px; }
+  .glasses-2 { top: 20%; right: 20%; animation-delay: 2s; animation-duration: 13s; width: 70px; height: 70px; }
+  .glasses-3 { top: 40%; left: 10%; animation-delay: 4s; animation-duration: 16s; width: 45px; height: 45px; }
+  .glasses-4 { top: 60%; right: 15%; animation-delay: 6s; animation-duration: 14s; width: 65px; height: 65px; }
+  .glasses-5 { top: 80%; left: 25%; animation-delay: 8s; animation-duration: 15s; width: 55px; height: 55px; }
+  .glasses-6 { top: 70%; right: 30%; animation-delay: 10s; animation-duration: 13s; width: 60px; height: 60px; }
+  .glasses-7 { top: 30%; left: 40%; animation-delay: 12s; animation-duration: 16s; width: 50px; height: 50px; }
+  .glasses-8 { top: 50%; right: 45%; animation-delay: 14s; animation-duration: 14s; width: 70px; height: 70px; }
+  .glasses-9 { top: 15%; left: 50%; animation-delay: 3s; animation-duration: 15s; width: 55px; height: 55px; }
+  .glasses-10 { top: 65%; left: 60%; animation-delay: 5s; animation-duration: 13s; width: 48px; height: 48px; }
+  .glasses-11 { top: 35%; right: 25%; animation-delay: 7s; animation-duration: 16s; width: 62px; height: 62px; }
+  .glasses-12 { top: 85%; right: 40%; animation-delay: 9s; animation-duration: 14s; width: 52px; height: 52px; }
+  .glasses-13 { top: 25%; left: 70%; animation-delay: 11s; animation-duration: 15s; width: 58px; height: 58px; }
+  .glasses-14 { top: 55%; right: 5%; animation-delay: 13s; animation-duration: 13s; width: 46px; height: 46px; }
+  .glasses-15 { top: 5%; right: 35%; animation-delay: 1s; animation-duration: 16s; width: 54px; height: 54px; }
+  .glasses-16 { top: 75%; left: 5%; animation-delay: 15s; animation-duration: 14s; width: 64px; height: 64px; }
+  .glasses-17 { top: 45%; left: 75%; animation-delay: 17s; animation-duration: 15s; width: 50px; height: 50px; }
+  .glasses-18 { top: 90%; right: 60%; animation-delay: 19s; animation-duration: 13s; width: 56px; height: 56px; }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+      transform: translate(30px, -30px) rotate(5deg);
+    }
+    50% {
+      transform: translate(-20px, 20px) rotate(-5deg);
+    }
+    75% {
+      transform: translate(40px, 10px) rotate(3deg);
+    }
+  }
+
+  /* Particles */
+  .particle {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: rise 10s infinite ease-in;
+  }
+
+  .particle-1 { width: 4px; height: 4px; left: 5%; bottom: -10px; animation-delay: 0s; animation-duration: 8s; }
+  .particle-2 { width: 6px; height: 6px; left: 15%; bottom: -10px; animation-delay: 1s; animation-duration: 10s; }
+  .particle-3 { width: 3px; height: 3px; left: 25%; bottom: -10px; animation-delay: 2s; animation-duration: 9s; }
+  .particle-4 { width: 5px; height: 5px; left: 35%; bottom: -10px; animation-delay: 3s; animation-duration: 11s; }
+  .particle-5 { width: 4px; height: 4px; left: 45%; bottom: -10px; animation-delay: 4s; animation-duration: 8s; }
+  .particle-6 { width: 6px; height: 6px; left: 55%; bottom: -10px; animation-delay: 5s; animation-duration: 10s; }
+  .particle-7 { width: 3px; height: 3px; left: 65%; bottom: -10px; animation-delay: 6s; animation-duration: 9s; }
+  .particle-8 { width: 5px; height: 5px; left: 75%; bottom: -10px; animation-delay: 7s; animation-duration: 11s; }
+  .particle-9 { width: 4px; height: 4px; left: 85%; bottom: -10px; animation-delay: 0.5s; animation-duration: 8s; }
+  .particle-10 { width: 5px; height: 5px; left: 95%; bottom: -10px; animation-delay: 1.5s; animation-duration: 10s; }
+  .particle-11 { width: 3px; height: 3px; left: 8%; bottom: -10px; animation-delay: 2.5s; animation-duration: 9s; }
+  .particle-12 { width: 6px; height: 6px; left: 18%; bottom: -10px; animation-delay: 3.5s; animation-duration: 11s; }
+  .particle-13 { width: 4px; height: 4px; left: 28%; bottom: -10px; animation-delay: 4.5s; animation-duration: 8s; }
+  .particle-14 { width: 5px; height: 5px; left: 38%; bottom: -10px; animation-delay: 5.5s; animation-duration: 10s; }
+  .particle-15 { width: 3px; height: 3px; left: 48%; bottom: -10px; animation-delay: 6.5s; animation-duration: 9s; }
+  .particle-16 { width: 6px; height: 6px; left: 58%; bottom: -10px; animation-delay: 7.5s; animation-duration: 11s; }
+  .particle-17 { width: 4px; height: 4px; left: 68%; bottom: -10px; animation-delay: 8.5s; animation-duration: 8s; }
+  .particle-18 { width: 5px; height: 5px; left: 78%; bottom: -10px; animation-delay: 9.5s; animation-duration: 10s; }
+  .particle-19 { width: 3px; height: 3px; left: 88%; bottom: -10px; animation-delay: 1.2s; animation-duration: 9s; }
+  .particle-20 { width: 6px; height: 6px; left: 12%; bottom: -10px; animation-delay: 2.2s; animation-duration: 11s; }
+
+  @keyframes rise {
+    0% {
+      bottom: -10px;
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      bottom: 110%;
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  import confetti from 'canvas-confetti';
+
+  // Category filter functionality
+  const tabs = document.querySelectorAll('.category-tab');
+  const projectCards = document.querySelectorAll('.project-card') as NodeListOf<HTMLElement>;
+  const countElement = document.getElementById('count');
+
+  // Check if device is desktop (width >= 1024px)
+  function isDesktop() {
+    return window.innerWidth >= 1024;
+  }
+
+  // Confetti colors by category
+  const categoryColors: Record<string, string[]> = {
+    all: ['#9FD356', '#7AC74F', '#5BB843', '#C4E538'], // Green (default)
+    Branding: ['#FF6B6B', '#FF8787', '#FFA5A5', '#FFC9C9'], // Red/Pink
+    'Campañas': ['#4ECDC4', '#45B7AF', '#3BA199', '#2F8A82'], // Teal
+    'Comunicación Integrada': ['#95E1D3', '#7DD8C8', '#64CFBD', '#4CC6B2'], // Light Teal
+    'Contenido Digital': ['#FFD93D', '#FFE066', '#FFE799', '#FFEECC'], // Yellow
+    Dirección: ['#A29BFE', '#918EF4', '#7F7AEA', '#6C66E0'], // Purple
+    'Diseño Estratégico': ['#FF8A5B', '#FF9D75', '#FFB08F', '#FFC3A9'], // Orange
+    'Diseño Gráfico': ['#F38181', '#F59393', '#F7A5A5', '#F9B7B7'], // Coral
+    Fotografia: ['#74B9FF', '#5EAEFF', '#48A3FF', '#3298FF'], // Blue
+    'Mercadeo y Gestión': ['#A8E6CF', '#90DDB8', '#78D4A1', '#60CB8A'], // Mint
+    Transmedia: ['#DDA15E', '#C98E4D', '#B57B3C', '#A1682B'], // Brown/Gold
+  };
+
+  // Confetti effect from button position with category colors
+  function triggerConfetti(button: HTMLElement, category: string) {
+    if (!isDesktop()) return; // Only on desktop
+
+    const rect = button.getBoundingClientRect();
+    const x = (rect.left + rect.width / 2) / window.innerWidth;
+    const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+    // Get colors for this category, fallback to default green
+    const colors = categoryColors[category] || categoryColors.all;
+
+    confetti({
+      particleCount: 50,
+      spread: 60,
+      origin: { x, y },
+      colors: colors,
+      ticks: 100,
+      gravity: 1.2,
+      scalar: 0.8
+    });
+  }
+
+  function filterProjects(selectedCategory: string) {
+    let visibleCount = 0;
+
+    projectCards.forEach(card => {
+      const categories = JSON.parse(card.getAttribute('data-categories') || '[]');
+
+      if (selectedCategory === 'all' || categories.includes(selectedCategory)) {
+        card.classList.remove('hidden');
+        visibleCount++;
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    if (countElement) {
+      countElement.textContent = visibleCount.toString();
+    }
+  }
+
+  // Add click handlers to tabs
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const category = tab.getAttribute('data-category') || 'all';
+
+      // Update active state
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      // Trigger confetti on desktop with category colors
+      triggerConfetti(tab as HTMLElement, category);
+
+      // Filter projects
+      filterProjects(category);
+    });
+  });
+</script>
